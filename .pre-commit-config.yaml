@@ -35,6 +35,7 @@ repos:
   - id: script-must-have-extension
   - id: script-must-not-have-extension
   - id: shfmt
+    args: [-ci]
 - repo: https://github.com/jackdewinter/pymarkdown
   rev: v0.9.11
   hooks:

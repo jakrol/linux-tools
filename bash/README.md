@@ -1,5 +1,20 @@
 # Bash scripts and libraries
 
+## checksum
+
+Wrapper around md5sum, sha1sum, sha256sum. Just run
+
+```bash
+checksum <path-to-file>  <checksum>
+```
+
+and don't care about checksum type, formatting etc. Example:
+
+```bash
+checksum checksum a6011 fb154 da9bf 6a853 8b8d0 23c9c91
+checksum: OK
+```
+
 ## ssh-agent-vault
 
 Tool to use ssh-keys from ssh-agent to encrypt/decrypt passwords
