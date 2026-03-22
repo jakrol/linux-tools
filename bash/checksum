@@ -92,14 +92,21 @@ if [[ ! -f "$FILE" ]]; then
 	help 3
 fi
 
-case "${#CHECKSUM}" in
-	32) ALGO=md5 ;;
-	40) ALGO=sha1 ;;
-	64) ALGO=sha256 ;;
-	*)
-		echo "ERROR: unable to determine checksum algorithm (checksum length: ${#CHECKSUM})"
-		exit 3
-		;;
+case "${CHECKSUM}" in
+	sha256:*) 
+		CHECKSUM=${CHECKSUM:7}
+		ALGO=sha256;;
 esac
+if [[ -n $ALGO ]]; then
+	case "${#CHECKSUM}" in
+		32) ALGO=md5 ;;
+		40) ALGO=sha1 ;;
+		64) ALGO=sha256 ;;
+		*)
+			echo "ERROR: unable to determine checksum algorithm (checksum length: ${#CHECKSUM})"
+			exit 3
+			;;
+	esac
+fi
 
 check "$FILE" "$CHECKSUM" "$ALGO"
