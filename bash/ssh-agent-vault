@@ -19,7 +19,7 @@
 set -eo pipefail
 declare -a SSH_KEYS
 declare -r NAMESPACE_PATTERN="^[a-zA-Z0-9][a-zA-Z0-9@._-]*$"
-: "${SSH_AGENT_VAULT_DIRECTORY:=$HOME/.ssh-agent-vault}"
+: "${SSH_AGENT_VAULT_DIRECTORY:=${XDG_DATA_HOME:-$HOME/.local/share}/ssh-agent-vault}"
 
 ###############################################################################
 # Functions
@@ -59,7 +59,9 @@ help() {
 		Environment variables:
 		  SSH_AGENT_VAULT_DIRECTORY    Path to directory where to store the encrypted
 		                               passwords.
-		                               Defaults to '$HOME/.ssh-agent-vault/'.
+		                               Defaults to '\$XDG_DATA_HOME/ssh-agent-vault' or,
+		                               if $XDG_DATA_HOME is not set, to
+		                               '\$HOME/.local/shar/ssh-agent-vault'.
 		  SSH_AGENT_VAULT_NAMESPACE    Could be used instead of passing argument
 		                               <namespace>.
 
@@ -72,12 +74,12 @@ help() {
 		2. Use the signed message as key to encrypt the password with openssl, using
 		   aes256.
 		3. Use sha256 to hash "<namespace> <ssh-key>"
-		4. Use the hash as filename to store the file in VAULT_PASS_DECRYPT_DIRECTORY
+		4. Use the hash as filename to store the file in SSH_AGENT_VAULT_DIRECTORY
 
-		When using action 'decrypt', the tool will for each ssh-key provided by
+		When using action 'decrypt', the tool will, for each ssh-key provided by
 		ssh-agent:
 		1. Use sha256 to hash "<namespace> <ssh-key>"
-		2. Check, if a file named like the hash exists in VAULT_PASS_DECRYPT_DIRECTORY
+		2. Check, if a file named like the hash exists in SSH_AGENT_VAULT_DIRECTORY
 		3. If no such file exists, continue with the next ssh-key. If such a file
 		   exists, then
 		     - Use ssh-agent to sign the provided namespace with the selected ssh-key.
@@ -87,7 +89,7 @@ help() {
 		When using action 'delete', the tool we list the currently provided ssh-keys
 		from ssh-agent. After selected one of them to use, it will:
 		1. Use sha256 to hash "<namespace> <ssh-key>"
-		2. Check, if a file named like the hash exists in VAULT_PASS_DECRYPT_DIRECTORY
+		2. Check, if a file named like the hash exists in SSH_AGENT_VAULT_DIRECTORY
 		3. Delete the file.
 
 		Requirements:
@@ -111,7 +113,7 @@ get_ssh_keys() {
 	SSH_KEYS=()
 	while read -r line; do
 		SSH_KEYS+=("$line")
-	done < <(ssh-add -L | grep ssh-rsa)
+	done < <(ssh-add -L)
 }
 
 #-------------------------------------------------------------------------------
@@ -126,7 +128,7 @@ select_ssh_key() {
 		echo "  [$i]   ${SSH_KEYS[i]}"
 	done
 	while true; do
-		echo -e -n "\nChoose with ssh key shoud be used for namespace \"$namespace\": "
+		echo -e -n "\nChoose which ssh key should be used for namespace \"$namespace\": "
 		read -r index
 		if [[ $index =~ ^[[:digit:]]+$ && $index -ge 0 && $index -lt ${#SSH_KEYS[@]} ]]; then
 			SSH_KEY="${SSH_KEYS[index]}"
